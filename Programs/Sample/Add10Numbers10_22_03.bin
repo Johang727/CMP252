@@ -1,0 +1,49 @@
+;
+; Alec Engebretson
+;
+; High-level language algorithm to add 10 numbers
+; 
+;	Initialize total to 0
+;	Initialize counter to 10
+;	Initialize point to address of first number
+;	Do
+;		Obtain number
+;		Point to next number
+;		Add number to total
+;		Decrement counter
+;	While counter > 0
+;
+; Machine-level language algorithm to add 10 numbers
+;
+;	Initialize R1 to 0 (R1 is total)
+;	Initialize R4 to 10 (R4 is counter)
+;	Initialize R2 to address of first number (x3100) (R2 points to next number)
+; Loop: Place next number (pointed to by R2) in R3
+;	Increment R2 (points to next number)
+;	Add R3 to R1 (add number to total)
+;	Decrement R4
+;	Branch if positive to Loop
+;
+
+;  LC3 program to add 10 numbers 
+
+
+0011000000000000	; set x3000 as beginning location
+0101001001100000	; initialize total (R1) to 0
+0101100100100000	; 
+0001100100101010	; initialize counter (R4) to 10
+1110010011111100	; initalize point (R2) with address of first number (x3100)
+					; do
+0110011010000000	; 	obtain number (and place in R3)
+0001010010100001	; 	point to next number (increment R2)
+0001001001000011	; 	add number (in R3) to total (in R1)
+0001100100111111	; 	decrement counter (R4)
+0000001111111011	; while counter > 0
+1111000000100101	;
+
+
+
+
+
+
+

@@ -1,0 +1,84 @@
+; Johang Hernandez
+; Module 5 Assignment - High Quality
+
+; For a high quality assessment, modify the program so that when the program is finished,
+; the total number of characters entered that ARE upper case (A through Z) is contained in
+; register 1.
+;
+;	High Level Algorithm
+;
+;	total = 0
+;
+;	do
+;		Get input
+;		Put input into variable char
+;		Print char
+;		if char >= 65 (x41) && char <= 90 (x5A):
+;			total += 1
+;	while char != "*" // 42 | x2A
+
+;	------------------------
+;
+;	Machine Level Algorithm
+;		TRAP GETC (x20) or TRAP IN (x23)
+;		No echo			   Echo
+;
+;		TRAP OUT (x21)
+;		Print R0
+;	
+;	Start
+
+;	Initialize R2 to 0 (R2 is the # of characters that are uppercase)
+;	
+;	loop:
+;		Use TRAP x23 to put an ASCII Char in R0
+;		Use TRAP x21 to print R0
+
+;		Initialize R1 to 0 (R1 is temporary character storage)
+;		ADD R0 to R1 
+;		ADD -65 to R1 // if A, then = 0 || if a, then 32
+;		If z || p, branch to counter script
+;		
+;		ADD -42 from R0
+;			If n || p, branch to loop
+
+;		HALT
+
+;		ADD -26 to R1 // if A, then -26 || if a, then 6 || if Z, then -1
+;		if z || p, branch to loop
+;		ADD 1 to R2
+;		if p branch to loop // this should always be positive, if it isn't, I did something wrong
+
+
+0011 0000 0000 0000			; set x3000 as beginning location
+
+0101 010 010 1 00000		; x3000		set R2 to 0
+
+; Start Loop
+1111 0000 0010 0011			; x3001		get character from user -> R0
+1111 0000 0010 0001			; x3002		print character from R0
+
+0101 001 001 1 00000		; x3003		set R1 to 0
+0001 001 000 000 001		; x3004		add R0 to R1
+
+0001 001 001 1 10000		; x3005		Subtract 16 from R1
+0001 001 001 1 10000		; x3006		Subtract 16 from R1
+0001 001 001 1 10000		; x3007		Subtract 16 from R1
+0001 001 001 1 10000		; x3008		Subtract 16 from R1
+0001 001 001 1 11111		; x3009		Subtract 1 from R1
+
+0001 000 000 1 10000		; x3010		SUB 16 from R0
+0001 000 000 1 10000		; x3011		SUB 16 from R0
+0001 000 000 1 10110		; x3012		SUB 10 from R0
+0000 1 0 1 111111010		; x3013		Branch to x3000 when negative or positive
+
+1111 0000 0010 0101			; x3014		HALT PROGRAM
+
+; Inc Counter Branch
+0001 001 001 1 10000		; x3015		Subtract 16 from R1
+0001 001 001 1 10110		; x3016		Subtract 10 from R1
+0000 0 1 1 111101111		; x3017		Return to loop if not within bounds char <= 90
+
+0001 010 010 1 00001		; x3018		Increment Counter by 1
+
+0000 0 0 1 111101101		; x3019		Return to loop when positive 

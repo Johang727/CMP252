@@ -39,7 +39,7 @@
 0001001001000011	; 	add number (in R3) to total (in R1)
 0001100100111111	; 	decrement counter (R4)
 0000001111111011	; while counter > 0
-1111000000100101	;
+1111000000100101	; 
 
 
 

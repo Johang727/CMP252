@@ -88,62 +88,57 @@
 0101 001 001 1 00000		; x3002		set R1 to 0 | Initialize char
 0001 001 000 000 001		; x3003		add R0 to R1 | set char to input
 
-0101 001 001 1 00000		; x3004		set R1 to 0 
-0001 001 000 000 001		; x3005		add R0 to R1
-
-; Check if lowercase
+; Check if lowercase (if character is greater than or equal to 97) 
+0001 001 001 1 10000		; x3004		Subtract 16 from R1
+0001 001 001 1 10000		; x3005		Subtract 16 from R1
 0001 001 001 1 10000		; x3006		Subtract 16 from R1
 0001 001 001 1 10000		; x3007		Subtract 16 from R1
 0001 001 001 1 10000		; x3008		Subtract 16 from R1
 0001 001 001 1 10000		; x3009		Subtract 16 from R1
-0001 001 001 1 10000		; x300A		Subtract 16 from R1
-0001 001 001 1 10000		; x300B		Subtract 16 from R1
-0001 001 001 1 11111		; x300C		Subtract 1 from R1
-0000 0 1 1 000001110		; x300D 	Jump to printing branch (x301C) if zero or positive
+0001 001 001 1 11111		; x300A		Subtract 1 from R1
+0000 0 1 1 000001110		; x300B 	Jump to printing branch (x301A) if zero or positive (>=)
 
-; Print character if not lowercase
-1111 0000 0010 0001			; x300E		print character from R0
+; Print character if not lowercase; the "else" case
+1111 0000 0010 0001			; x300C		print character from R0
 
 ; Check if uppercase
-0101 001 001 1 00000		; x300F		set R1 to 0 
-0001 001 000 000 001		; x3010		add R0 to R1
+0101 001 001 1 00000		; x300D		set R1 to 0 
+0001 001 000 000 001		; x300E		add R0 to R1
+0001 001 001 1 10000		; x300F		Subtract 16 from R1
+0001 001 001 1 10000		; x3010		Subtract 16 from R1
 0001 001 001 1 10000		; x3011		Subtract 16 from R1
 0001 001 001 1 10000		; x3012		Subtract 16 from R1
-0001 001 001 1 10000		; x3013		Subtract 16 from R1
-0001 001 001 1 10000		; x3014		Subtract 16 from R1
-0001 001 001 1 11111		; x3015		Subtract 1 from R1
-0000 0 1 1 000001110		; x3016 	Jump to inc counter branch (x3025) if zero or positive
+0001 001 001 1 11111		; x3013		Subtract 1 from R1
+0000 0 1 1 000001110		; x3014 	Jump to inc counter branch (x3023) if zero or positive
 
 ; Check if exit character *
-0001 000 000 1 10000		; x3017		SUB 16 from R0
-0001 000 000 1 10000		; x3018		SUB 16 from R0
-0001 000 000 1 10110		; x3019		SUB 10 from R0
-0000 1 0 1 111100110		; x301A		Return to loop (x3001) when negative or positive
+0001 000 000 1 10000		; x3015		SUB 16 from R0
+0001 000 000 1 10000		; x3016		SUB 16 from R0
+0001 000 000 1 10110		; x3017		SUB 10 from R0
+0000 1 0 1 111101000		; x3018		Return to loop (x3001) when negative or positive
 
-1111 0000 0010 0101			; x301B		HALT PROGRAM
+1111 0000 0010 0101			; x3019		HALT PROGRAM
 
 ; Printing Branch
-0001 001 001 1 10000		; x301C		SUB 16 from R1
-0001 001 001 1 10110		; x301D		SUB 10 from R1
-0000 0 1 1 111101111		; x301E		Return to x300E if not within bounds char > 122
+0001 001 001 1 10000		; x301A		SUB 16 from R1
+0001 001 001 1 10110		; x301B		SUB 10 from R1
+0000 0 1 1 111101111		; x301C		Return to x300C if not within bounds char > 122 // print out character
 
-0001 000 000 1 10000		; x301F		SUB 16 from R0
-0001 000 000 1 10000		; x3020		SUB 16 from R0
+0001 000 000 1 10000		; x301D		SUB 16 from R0
+0001 000 000 1 10000		; x301E		SUB 16 from R0
 
-1111 0000 0010 0001			; x3021		print character from R0
+1111 0000 0010 0001			; x301F		print now upper character from R0
 
-0001 000 000 1 01111		; x3022		ADD 16 to R0
-0001 000 000 1 01111		; x3023		ADD 16 to R0
+0001 000 000 1 01111		; x3020		ADD 16 to R0
+0001 000 000 1 01111		; x3021		ADD 16 to R0
 
-0000 1 1 1 111101010		; x3024		Return to loop (x300F)
+0000 1 1 1 111101010		; x3022		Return to loop (x300D)
 
 ; Inc Counter Branch
-0001 001 001 1 10000		; x3025		Subtract 16 from R1
-0001 001 001 1 10110		; x3026		Subtract 10 from R1
-0000 0 1 1 111011001		; x3027		Return to loop start (x3001)  if not within bounds char > 90
+0001 001 001 1 10000		; x3023		Subtract 16 from R1
+0001 001 001 1 10110		; x3024		Subtract 10 from R1
+0000 0 1 1 111011011		; x3025		Return to loop start (x3001)  if not within bounds char > 90
 
-0001 010 010 1 00001		; x3028		Increment Counter by 1
+0001 010 010 1 00001		; x3026		Increment Counter by 1
 
-0000 1 1 1 111010111		; x3029		Return to loop start (x3001) 
-
-
+0000 1 1 1 111011001		; x3027		Return to loop start (x3001) 

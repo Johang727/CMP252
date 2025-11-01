@@ -58,7 +58,7 @@
 1111 0000 0010 0011			; x3001		get character from user -> R0
 1111 0000 0010 0001			; x3002		print character from R0
 
-0101 001 001 1 00000		; x3003		set R1 to 0
+0101 001 001 1 00000		; x3003		set R1 to 0 
 0001 001 000 000 001		; x3004		add R0 to R1
 
 0001 001 001 1 10000		; x3005		Subtract 16 from R1
@@ -67,18 +67,20 @@
 0001 001 001 1 10000		; x3008		Subtract 16 from R1
 0001 001 001 1 11111		; x3009		Subtract 1 from R1
 
-0001 000 000 1 10000		; x3010		SUB 16 from R0
-0001 000 000 1 10000		; x3011		SUB 16 from R0
-0001 000 000 1 10110		; x3012		SUB 10 from R0
-0000 1 0 1 111111010		; x3013		Branch to x3000 when negative or positive
+0000 0 1 1 000000101		; x300A 	Jump to inc counter branch (x3010)
 
-1111 0000 0010 0101			; x3014		HALT PROGRAM
+0001 000 000 1 10000		; x300B		SUB 16 from R0
+0001 000 000 1 10000		; x300C		SUB 16 from R0
+0001 000 000 1 10110		; x300D		SUB 10 from R0
+0000 1 0 1 111110010		; x300E		Return to loop (x3001) when negative or positive
+
+1111 0000 0010 0101			; x300F		HALT PROGRAM
 
 ; Inc Counter Branch
-0001 001 001 1 10000		; x3015		Subtract 16 from R1
-0001 001 001 1 10110		; x3016		Subtract 10 from R1
-0000 0 1 1 111101111		; x3017		Return to loop if not within bounds char <= 90
+0001 001 001 1 10000		; x3010		Subtract 16 from R1
+0001 001 001 1 10110		; x3011		Subtract 10 from R1
+0000 0 1 1 111101110		; x3012		Return to loop if not within bounds char <= 90
 
-0001 010 010 1 00001		; x3018		Increment Counter by 1
+0001 010 010 1 00001		; x3013		Increment Counter by 1
 
-0000 0 0 1 111101101		; x3019		Return to loop when positive 
+0000 1 1 1 111101100		; x3014		Return to loop (x3001) 

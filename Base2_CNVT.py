@@ -18,6 +18,9 @@ def convert_to_obj(input_file_path, output_file_path):
                 
                 # Remove all whitespace
                 bin_string = re.sub(r'[\s.]+', '', line)
+
+                # Swap placeholders with 0s
+                bin_string = bin_string.replace("X", "0")
                 
                 # Skip empty lines
                 if not bin_string:

@@ -35,7 +35,7 @@
 ;		Init. R1 to 0 (R1 is temporary character storage)
 ;		ADD R0 to R1
 ;		ADD -97 to R1 			// if a, then = 0 || if A, -32 || if {, then 26
-;		if z || p, 
+;		if z || p,  
 ;			branch to printing script
 ;		else
 ;			print char [R0] as is
@@ -78,6 +78,13 @@
 
 
 ; -----
+
+; Variables:
+;	R0 - Input
+;	R1 - Temporary Character Storage
+;	R2 - Capital Letter Counter 
+
+
 ; Start of Script
 
 ; place program in x3000

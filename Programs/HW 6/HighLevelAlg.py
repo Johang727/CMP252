@@ -5,7 +5,7 @@
 # 5. repeat until halt character
 
 
-def built_in_funcs():
+def built_in_funcs()-> None:
     while True:
         # 1. get input
         base_string:str = input("Input characters: ")[:7]
@@ -26,3 +26,10 @@ def built_in_funcs():
 
     print("Exit.")
 
+built_in_funcs() 
+
+"""
+I was originally gonna make a "lower level" one, where
+    it relies less on built in funcs, but python isn't
+    really the best when it comes to pointers :p 
+"""

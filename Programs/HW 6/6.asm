@@ -13,39 +13,67 @@
 
 	.ORIG	x3000
 
-	; print prompt 
+	; Reading Logic
+
+	; print prompt
 	LEA	R0,	PRMTIN
 	TRAP	x22 ; PUTS
 
+	LD	R2,	COUNT7 ; load the number 7 into R2 for counting
+	LEA	R1,	INPUT ; load pointer of input storage
 
-	; Reading Logic
-	LD	R2,	COUNT6 ; load the number 7 into R2 for counting
-	LEA	R1,	INPUT ; load address of Input
-
+	; get character input without prompt
 RD_LP	TRAP	x20
-
+	; echo the character
 	TRAP	x21
 
-	; TODO check for branching out conditions, else just fall through
-	; if is a newline, the continue | if is a #, then halt the program
+	; check if newline
+	AND	R3,	R3,	#0
+	ADD	R3,	R3,	R0
+	ADD	R3,	R3,	#-10 ; 10 is LF
+	BRZ	RD_EX ; if newline, continue
+
+	; check if counter == 7
+	ADD	R2,	R2,	#-7
+	BRN	SKP_EX ; its not the first character, therefore
+			; there is no point in checking
+
+	; check if exit character
+	AND	R3,	R3,	#0
+	ADD	R3,	R3,	R0
+	ADD	R3,	R3,	#-16
+	ADD	R3,	R3,	#-16
+	ADD	R3,	R3,	#-3
+	BRZ	HT
+
+SKP_EX	ADD	R2,	R2,	#7
 
 	; store the value
-	STR	R0,	R1,	000000
+	STR	R0,	R1,	#0
 
+	; increment pointer
 	ADD	R1,	R1,	#1
-	ADD	R2,	R2,	#-1 ; if >0, continue
+	; if >=0, loop again
+	ADD	R2,	R2,	#-1
+	BRP	RD_LP
 
-	BRZP	RD_LP
-
-	; print a new line for simplicity
-	LEA	R0,	NWLN
+	; print a new line for legibility
+RD_EX	LEA	R0,	NWLN
 	TRAP	x22
-	TRAP	x25
+	BRNZP	HT
 
 
 	; Finding Logic
-	LD	R2,	COUNT2 ; load the number 7 into R2 for counting
-	LEA	R1,	FIND ; load address of Finding Input Storage
+	LEA	R0,	PRMTFD
+	TRAP	x22 ; PUTS
+
+	LD	R2,	COUNT2 ; load the number 2 into R2 for counting
+	LEA	R1,	FIND ; load pointer of Finding Input Storage
+
+	; get character input without prompt
+FD_LP	TRAP	x20
+	; echo input
+	TRAP	x21
 
 
 	; Replacing Logic
@@ -56,6 +84,8 @@ RD_LP	TRAP	x20
 
 	; Halting script
 
+HT	TRAP x25
+
 
 ; var def
 INPUT	.BLKW		7
@@ -63,15 +93,13 @@ FIND	.BLKW		2
 REPLACE	.BLKW		2
 
 
-PRMTIN	.STRINGZ	"Input string of 7 or less:"
-PRMTFD	.STRINGZ	"Find:"
-PRMTRP	.STRINGZ	"Replace:"
+PRMTIN	.STRINGZ	"Input string of 7 or less characters: "
+PRMTFD	.STRINGZ	"Find: "
+PRMTRP	.STRINGZ	"Replace: "
 
 NWLN	.FILL		x0D0A ; All combinations of CRLF just cause a square character, dunno why
 
-COUNT6	.FILL		x0006
+COUNT7	.FILL		x0007
 COUNT2	.FILL		x0002
-
-
 
 	.END

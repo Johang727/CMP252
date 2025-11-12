@@ -1,12 +1,16 @@
 //Symbol Name		Page Address
 //----------------	------------
-//	COUNT2                  3046
-//	COUNT6                  3045
-//	FIND                    3016
-//	INPUT                   300F
-//	NWLN                    3044
-//	PRMTFD                  3035
-//	PRMTIN                  301A
-//	PRMTRP                  303B
+//	COUNT2                  3066
+//	COUNT7                  3065
+//	FD_LP                   301E
+//	FIND                    3028
+//	HT                      3020
+//	INPUT                   3021
+//	NWLN                    3064
+//	PRMTFD                  3053
+//	PRMTIN                  302C
+//	PRMTRP                  305A
+//	RD_EX                   3017
 //	RD_LP                   3004
-//	REPLACE                 3018
+//	REPLACE                 302A
+//	SKP_EX                  3012

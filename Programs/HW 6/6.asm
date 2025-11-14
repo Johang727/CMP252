@@ -1,17 +1,24 @@
 ; variables
 
 ; registers:
-	; for input section:
+	; for input:
 		; R1: pointer storage
 		; R2: counter (decrementing)
 		; R3: temporary character storage
 		; R4: counter (incrementing)
-	; for find & replace section:
-		; R1: str pointer
-		; R2: str length counter
+	; for 1 char find & replace:
+		; R1: in str pointer
+		; R2: in str length counter
 		; R3: find char
 		; R4: replace char
 		; R5: current working char
+	; for 2 char find & replace:
+		; R1: in str pointer
+		; R2: in str len counter
+		; R3: find str pointer
+		; R4: replacement str pointer
+		; R5: current working character or replacement character
+		; R6: current character to compare to
 
 ; memory:
 	; locations: 
@@ -225,11 +232,11 @@ FR1_LP	LDR	R5,	R1,	#0 ; load character where R1 is pointing
 
 ADD	R5,	R5,	R3 ; should equal 0 if same
 
-BRnp DEC_CNT ; if negative or positive, just loop again
+BRnp DC_CNT1 ; if negative or positive, just loop again
 
 STR	R4,	R1,	#0 ; store replacement character if same
 
-DEC_CNT	ADD	R1,	R1,	#1 ; increment pointer
+DC_CNT1	ADD	R1,	R1,	#1 ; increment pointer
 ADD	R2,	R2,	#-1 ; dec counter
 BRp	FR1_LP ; repeat if counter is positive
 
@@ -241,7 +248,65 @@ BRnzp	P_FIN
 
 
 ; two chars to find & replace
-FR2	BRNZP	EXP1
+FR2	LD	R2,	INP_LEN ; get len of string and use as counter
+LEA	R1,	INPUT ; load pointer
+ADD	R1,	R1,	#1 ; offset pointer by 1
+
+LEA	R3,	FIND
+LEA	R4,	REPLACE
+
+FR2_LP	LDR	R5,	R1,	#-1 ; load character where R1-1 is pointing
+
+LDR	R6,	R3,	#0 ; check if first character is equal
+
+; compare
+NOT	R6,	R6
+ADD	R6,	R6,	#1
+ADD	R5,	R5,	R6 ; if same = 0
+
+BRnp	DC_CNT2 ; no point in checking 2nd if first doesn't match
+
+; load second character, since first matches
+LDR	R5,	R1,	#0
+
+LDR	R6,	R3,	#1
+
+NOT	R6,	R6
+ADD	R6,	R6,	#1
+ADD	R5,	R5,	R6 
+
+BRnp	DC_CNT2 ; second character doesn't match, dont replace.
+
+; if it does match
+
+; character 1
+LDR	R5,	R4,	#0
+BRnp	NT_NL
+; if null
+LD	R5,	NULL_R
+
+NT_NL	STR	R5,	R1,	#-1 ; replace character in final string
+
+; character 2
+LDR	R5,	R4,	#1
+BRnp	NT_NL2
+; if null
+LD	R5,	NULL_R
+
+NT_NL2	STR	R5,	R1,	#0 ; replace character in final string
+
+
+; dec our counter
+ADD	R1,	R1,	#1
+ADD	R2,	R2,	#-1
+
+
+DC_CNT2 ADD	R1,	R1,	#1
+ADD	R2,	R2,	#-1
+BRp	FR2_LP
+
+
+
 
 
 
@@ -284,6 +349,8 @@ PRMTRP	.STRINGZ	"Replace (<= length of find): "
 
 NWLN	.FILL		x0A00 
 	.FILL		x0000 ; need this to prevent it printing out the next string
+
+NULL_R	.FILL	x20 ; just replace it with a space
 
 ALTIN	.STRINGZ	"Input empty, nothing to do."
 ALTFD	.STRINGZ	"Search query empty, nothing to do."

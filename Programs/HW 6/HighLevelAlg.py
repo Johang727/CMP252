@@ -13,7 +13,7 @@ def built_in_funcs()-> None:
         # 5. check if input is #
         if base_string == "#":
             break
-
+ 
         # continue getting input
         find:str = input("Find: ") # 2
         replace:str = input("Replace: ") # 3

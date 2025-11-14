@@ -1,11 +1,17 @@
 ; variables
 
 ; registers:
-	; R1: pointer storage
-	; R2: counter (char limit)
-	; R3: temporary character storage
-	; R4: counter (replacement char limit)
-		; this has to be equal to find to not overflow
+	; for input section:
+		; R1: pointer storage
+		; R2: counter (decrementing)
+		; R3: temporary character storage
+		; R4: counter (incrementing)
+	; for find & replace section:
+		; R1: str pointer
+		; R2: str length counter
+		; R3: find char
+		; R4: replace char
+		; R5: current working char
 
 ; memory:
 	; locations: 
@@ -13,13 +19,15 @@
 
 		; RD_LP: Read Loop - Start of the Reading Loop
 		; SKP_EX: Skip Exit - Skip checking for # if it's not the first char.
-		; RD_EX: Read Exit - Allows for continuing on newline, prints out a newline after
+		; RD_EX: Read Exit - Allows for breaking on newline, prints out a newline after
 
 		; FND: Start of FIND input reading logic
 		; FD_LP: Find Loop - Start of the Reading Loop for what to find
+		; FD_EX: Find Exit - Allows for breaking on newline, prints out a newline after
 
-
-		; HT: Halt - In case I want to do something before halting.
+		; RP: Start of the REPLACE reading logic
+		; RP_LP: Replace Loop - Start of the reading loop for the replacement chars
+		; RP_EX: Replace Exit - Allows for breaking on a newline, prints out a new line
 
 	; variables
 		; INPUT: A block of 8 memory locations to hold the string to be modified
@@ -53,6 +61,8 @@ START	LEA	R0,	PRMTIN
 	LD	R2,	COUNT7 ; load the number 7 into R2 for counting
 	LEA	R1,	INPUT ; load pointer of input storage
 
+	AND	R4,	R4,	#0 ; reset counters
+
 	; get character input without prompt
 RD_LP	TRAP	x20
 	; echo the character
@@ -62,11 +72,11 @@ RD_LP	TRAP	x20
 	AND	R3,	R3,	#0
 	ADD	R3,	R3,	R0
 	ADD	R3,	R3,	#-10 ; 10 is LF
-	BRZ	RD_EX ; if newline, continue
+	BRz	RD_EX ; if newline, continue
 
 	; check if counter == 7
 	ADD	R2,	R2,	#-7
-	BRN	SKP_EX ; its not the first character, therefore
+	BRn	SKP_EX ; its not the first character, therefore
 			; there is no point in checking
 
 	; check if exit character
@@ -75,7 +85,7 @@ RD_LP	TRAP	x20
 	ADD	R3,	R3,	#-16
 	ADD	R3,	R3,	#-16
 	ADD	R3,	R3,	#-3
-	BRZ	HT
+	BRz	EXP2
 
 SKP_EX	ADD	R2,	R2,	#7
 
@@ -84,9 +94,12 @@ SKP_EX	ADD	R2,	R2,	#7
 
 	; increment pointer
 	ADD	R1,	R1,	#1
+
+	; increment length counter
+	ADD	R4,	R4,	#1
 	; if >=0, loop again
 	ADD	R2,	R2,	#-1
-	BRP	RD_LP
+	BRp	RD_LP
 
 	; print a new line for legibility
 RD_EX	LEA	R0,	NWLN
@@ -94,12 +107,13 @@ RD_EX	LEA	R0,	NWLN
 
 	; check if counter is 7
 	ADD	R2,	R2,	#-7
-	; input holds something, proceed
-	BRN	FND
+	; input holds something, store the length and proceed
+	ST	R4,	INP_LEN
+	BRn	FND
 	; else, tell the user theres nothing here and return to the start
 	LEA	R0,	ALTIN
 	TRAP	x22
-	BRNZP	START
+	BRnzp	START
 
 
 ; Find Input Logic
@@ -121,7 +135,7 @@ FD_LP	TRAP	x20
 	AND	R3,	R3,	#0
 	ADD	R3,	R3,	R0
 	ADD	R3,	R3,	#-10 ; 10 is LF
-	BRZ	FD_EX ; if newline, continue
+	BRz	FD_EX ; if newline, continue
 
 	; store the value
 	STR	R0,	R1,	#0
@@ -133,7 +147,7 @@ FD_LP	TRAP	x20
 	ADD	R4,	R4,	#1
 	; decrement counter
 	ADD	R2,	R2,	#-1
-	BRP FD_LP
+	BRp FD_LP
 
 FD_EX	LEA	R0,	NWLN
 	TRAP	x22
@@ -141,12 +155,12 @@ FD_EX	LEA	R0,	NWLN
 	; check if counter is still two
 	ADD	R2,	R2,	#-2
 	; input holds something, proceed
-	BRN	RP
+	BRn	RP
 
 	; else, tell the user theres nothing to find.
 	LEA	R0,	ALTFD
 	TRAP	x22
-	BRNZP	START
+	BRnzp	FND
 
 ; Replace In Logic
 
@@ -155,6 +169,10 @@ RP	LEA	R0,	PRMTRP
 
 	LEA	R1,	REPLACE
 
+	; set counter to our len of find
+	AND	R2,	R2,	#0
+	ADD	R2,	R2,	R4
+
 RP_LP	TRAP	x20
 	TRAP	x21
 
@@ -162,7 +180,7 @@ RP_LP	TRAP	x20
 	AND	R3,	R3,	#0
 	ADD	R3,	R3,	R0
 	ADD	R3,	R3,	#-10 ; 10 is LF
-	BRZ	RP_EX ; if newline, continue
+	BRz	RP_EX ; if newline, continue
 
 	; store val
 	STR	R0,	R1,	#0
@@ -170,41 +188,109 @@ RP_LP	TRAP	x20
 	; increment pointer
 	ADD	R1,	R1,	#1
 	; dec counter
-	ADD	R4,	R4,	#-1
+	ADD	R2,	R2,	#-1
 	; repeat if positive
-	BRP	RP_LP
+	BRp	RP_LP
 
 RP_EX	LEA	R0,	NWLN
 	TRAP	x22
-	BRNZP	START
-
 
 ; replacement logic
 
-; printing logic
+	; if find len = 1
+	ADD	R4,	R4,	#-1
+	BRz	FR1
+	ADD	R4,	R4,	#1 ; didn't equal 1, check if 2
+
+	; if find len = 2
+	ADD	R4,	R4,	#-2
+	BRz	FR2
+
+	; if it somehow passed through
+
+	BRnzp	EXP0
 
 
-; Halting script
-HT	TRAP x25
+; only one char to find & replace
+FR1	LD	R2,	INP_LEN ; get length of string and use as counter | I could've also just kept looping until I found the break x0000
 
+LEA	R1,	INPUT ; load pointer to char array input
+LD	R3,	FIND ; load first character in find
+NOT	R3,	R3 ; prep for subtraction
+ADD	R3,	R3,	#1 
+LD	R4,	REPLACE ; load first character in replace
+
+; loop through each character in string and see if equal to FIND
+FR1_LP	LDR	R5,	R1,	#0 ; load character where R1 is pointing
+
+ADD	R5,	R5,	R3 ; should equal 0 if same
+
+BRnp DEC_CNT ; if negative or positive, just loop again
+
+STR	R4,	R1,	#0 ; store replacement character if same
+
+DEC_CNT	ADD	R1,	R1,	#1 ; increment pointer
+ADD	R2,	R2,	#-1 ; dec counter
+BRp	FR1_LP ; repeat if counter is positive
+
+BRnzp	P_FIN
+
+
+
+; counter = len(find) (INP_LEN)
+
+
+; two chars to find & replace
+FR2	BRNZP	EXP1
+
+
+
+; printing logic, branch to start after printing
+P_FIN	LEA	R0,	INPUT
+	TRAP	x22
+	LEA	R0,	NWLN
+	TRAP	x22
+	BRnzp	START ; go back to start when printing final
+
+
+; Exception Printing
+
+EXP0	LEA	R0,	EXPT0 ; unknown err
+	TRAP	x22
+	TRAP	x25
+
+EXP1	LEA	R0,	EXPT1 ; unfinished
+	TRAP	x22
+	TRAP	x25
+
+EXP2	LEA	R0,	EXPT2 ; exit char
+	TRAP	x22
+	TRAP	x25
 
 ; var def
+COUNT7	.FILL		x0007
+COUNT2	.FILL		x0002
+
+
 INPUT	.BLKW		8 
 FIND	.BLKW		3
 REPLACE	.BLKW		3
 
+INP_LEN	.BLKW		1 ; input length
 
 PRMTIN	.STRINGZ	"Input (max 7 chars): "
 PRMTFD	.STRINGZ	"Find (max 2 chars): "
 PRMTRP	.STRINGZ	"Replace (<= length of find): "
 
+NWLN	.FILL		x0A00 
+	.FILL		x0000 ; need this to prevent it printing out the next string
+
 ALTIN	.STRINGZ	"Input empty, nothing to do."
 ALTFD	.STRINGZ	"Search query empty, nothing to do."
 
+EXPT0	.STRINGZ	"Uh oh."
+EXPT1	.STRINGZ	"Unfinished."
+EXPT2	.STRINGZ	"Exit character found... halting."
 
-NWLN	.FILL		x0D0A ; All combinations of CR and LF just cause a square character, dunno why
-
-COUNT7	.FILL		x0007
-COUNT2	.FILL		x0002
 
 	.END

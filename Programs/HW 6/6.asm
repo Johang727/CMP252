@@ -1,3 +1,75 @@
+; high level algorithm:
+
+; python
+
+;while True:
+;	# 1. get input
+;	base_string:str = input("Input characters: ")[:7]
+
+;	# 5. check if input is #
+;	if base_string == "#":
+;		break
+
+;	# continue getting input
+;	find:str = input("Find: ") # 2
+;	replace:str = input("Replace: ") # 3
+
+;	# replace characters in string 
+;	base_string = base_string.replace(find, replace) # 3
+
+;	# 4
+;	print(base_string)
+
+;print("Exit.")
+
+; machine level algorithm:
+
+; LOOP Input
+; Get one character and branch out when:
+	; newline is found
+	; 7 characters have been read
+	; first character is '#', in which case halt program
+
+; store char 
+; decrement counter
+; branch back to LOOP when counter is positive
+
+; LOOP Find Input
+; Get one character and branch out when:
+	; newline is found
+	; 2 characters have been read
+; store char
+; decrement counter
+; branch back to LOOP when counter is positive
+
+; LOOP Replace Input
+; Get one character and branch out when:
+	; newline is found
+	; number of characters read = number of characters in Find input
+; store char
+; decrement counter
+; branch back to LOOP when counter is positive
+
+; if Find input length = 1
+; LOOP get character in input string
+;	compare to Find character
+;	if equal, replace with Replace character
+;	increment pointer
+;	decrement counter
+;	branch back to LOOP when counter is positive
+
+; if Find input length = 2
+; LOOP get character in input string
+;	compare to first Find character
+;	if equal, compare next character to second Find character
+;		if equal, replace both with Replace characters
+;	increment pointer by two if fully matched, else by one
+;	decrement counter
+;	branch back to LOOP when counter is positive
+
+; print final string after replacements
+
+
 ; variables
 
 ; registers:
@@ -36,39 +108,65 @@
 		; RP_LP: Replace Loop - Start of the reading loop for the replacement chars
 		; RP_EX: Replace Exit - Allows for breaking on a newline, prints out a new line
 
+		; FR1: Find/Replace 1 char
+		; FR1_LP: Find/Replace 1 loop
+
+		; DC_CNT1: Decrement Counter for FR1
+
+		; FR2: Find/Replace 2 chars
+		; FR2_LP: Find/Replace 2 chars loop 
+
+		; DC_CNT2: Decrement Couunter for FR2
+
+		; P_FIN: Printing Final: final string to print
+
+		; EXP0: Print out generic exception
+		; EXP2: Print out halting text
+
+
+
 	; variables
+
+		; COUNT7: Holds the number 7 to init a counter
+		; COUNT2: Holds the number 2 to init a counter
+
 		; INPUT: A block of 8 memory locations to hold the string to be modified
 		; FIND: A blk of 3 mem locs to hold what needs to be found in INPUT
 		; REPLACE: A blk of 3 mem locs to hold what needs to be replaced 
 			; Each of these have an extra location so that PUTS always finds an exit char x0000
 
+		; INP_LEN: input length - the length of the INPUT variable
+
 		; PRMTIN: Prompt In: Custom input prompt (for INPUT)
 		; PRMTFD: Prompt Find: Custom input prompt (for FIND)
 		; PRMTRP: Prompt Replace: Custom input prompt (for REPLACE)
-		
+
+		; NWLN: Holds a newline character
+
 		; ALTIN: Alert In: Tell the user that nothing will be done
 		;			because their input was empty.
 		; ALTFD: Alert Find: Tell the user that nothing will be searched for if
 		; 		query is empty
 
-		; NWLN: Holds a newline character
+		; EXPT0: Exception 0: Generic Exception to print
 
-		; COUNT7: Holds the number 7 to init a counter
-		; COUNT2: Holds the number 2 to init a counter
+		; EXPT2: Halt exception
 
 
 	.ORIG	x3000
 
-; Reading Logic
+; Input Logic
 
-	; print prompt
+		; print the prompt out.
 START	LEA	R0,	PRMTIN
 	TRAP	x22 ; PUTS
 
+	; set counter to 7
 	LD	R2,	COUNT7 ; load the number 7 into R2 for counting
 	LEA	R1,	INPUT ; load pointer of input storage
 
-	AND	R4,	R4,	#0 ; reset counters
+	; init. R4 (this will be our length counter)
+	AND	R4,	R4,	#0
 
 	; get character input without prompt
 RD_LP	TRAP	x20
@@ -79,7 +177,7 @@ RD_LP	TRAP	x20
 	AND	R3,	R3,	#0
 	ADD	R3,	R3,	R0
 	ADD	R3,	R3,	#-10 ; 10 is LF
-	BRz	RD_EX ; if newline, continue
+	BRz	RD_EX ; if newline, break out of loop
 
 	; check if counter == 7
 	ADD	R2,	R2,	#-7
@@ -92,9 +190,9 @@ RD_LP	TRAP	x20
 	ADD	R3,	R3,	#-16
 	ADD	R3,	R3,	#-16
 	ADD	R3,	R3,	#-3
-	BRz	EXP2
+	BRz	EXP2 ; halt program if exit char
 
-SKP_EX	ADD	R2,	R2,	#7
+SKP_EX	ADD	R2,	R2,	#7 ; restore counter if not first char
 
 	; store the value
 	STR	R0,	R1,	#0
@@ -120,10 +218,15 @@ RD_EX	LEA	R0,	NWLN
 	; else, tell the user theres nothing here and return to the start
 	LEA	R0,	ALTIN
 	TRAP	x22
+	LEA	R0,	NWLN
+	TRAP	x22
 	BRnzp	START
 
 
 ; Find Input Logic
+
+
+; print prompt
 FND	LEA	R0,	PRMTFD
 	TRAP	x22 ; PUTS
 
@@ -167,10 +270,13 @@ FD_EX	LEA	R0,	NWLN
 	; else, tell the user theres nothing to find.
 	LEA	R0,	ALTFD
 	TRAP	x22
+	LEA	R0,	NWLN
+	TRAP	x22
 	BRnzp	FND
 
 ; Replace In Logic
 
+; print prompt
 RP	LEA	R0,	PRMTRP
 	TRAP	x22
 
@@ -214,12 +320,11 @@ RP_EX	LEA	R0,	NWLN
 	BRz	FR2
 
 	; if it somehow passed through
-
 	BRnzp	EXP0
 
 
 ; only one char to find & replace
-FR1	LD	R2,	INP_LEN ; get length of string and use as counter | I could've also just kept looping until I found the break x0000
+FR1	LD	R2,	INP_LEN ; get length of string and use as counter
 
 LEA	R1,	INPUT ; load pointer to char array input
 LD	R3,	FIND ; load first character in find
@@ -240,7 +345,7 @@ DC_CNT1	ADD	R1,	R1,	#1 ; increment pointer
 ADD	R2,	R2,	#-1 ; dec counter
 BRp	FR1_LP ; repeat if counter is positive
 
-BRnzp	P_FIN
+BRnzp	P_FIN ; print final string
 
 
 
@@ -281,19 +386,11 @@ BRnp	DC_CNT2 ; second character doesn't match, dont replace.
 
 ; character 1
 LDR	R5,	R4,	#0
-BRnp	NT_NL
-; if null
-LD	R5,	NULL_R
-
-NT_NL	STR	R5,	R1,	#-1 ; replace character in final string
+STR	R5,	R1,	#-1 ; replace character in final string
 
 ; character 2
 LDR	R5,	R4,	#1
-BRnp	NT_NL2
-; if null
-LD	R5,	NULL_R
-
-NT_NL2	STR	R5,	R1,	#0 ; replace character in final string
+STR	R5,	R1,	#0 ; replace character in final string
 
 
 ; dec our counter
@@ -305,10 +402,7 @@ DC_CNT2 ADD	R1,	R1,	#1
 ADD	R2,	R2,	#-1
 BRp	FR2_LP
 
-
-
-
-
+; else, counter ran out, time to print out final string
 
 ; printing logic, branch to start after printing
 P_FIN	LEA	R0,	INPUT
@@ -319,12 +413,7 @@ P_FIN	LEA	R0,	INPUT
 
 
 ; Exception Printing
-
 EXP0	LEA	R0,	EXPT0 ; unknown err
-	TRAP	x22
-	TRAP	x25
-
-EXP1	LEA	R0,	EXPT1 ; unfinished
 	TRAP	x22
 	TRAP	x25
 
@@ -343,20 +432,20 @@ REPLACE	.BLKW		3
 
 INP_LEN	.BLKW		1 ; input length
 
-PRMTIN	.STRINGZ	"Input (max 7 chars): "
-PRMTFD	.STRINGZ	"Find (max 2 chars): "
+; prompt strings
+PRMTIN	.STRINGZ	"Input (<= 7 chars): "
+PRMTFD	.STRINGZ	"Find (<= 2 chars): "
 PRMTRP	.STRINGZ	"Replace (<= length of find): "
 
 NWLN	.FILL		x0A00 
-	.FILL		x0000 ; need this to prevent it printing out the next string
+		.FILL		x0000 ; need this to prevent it printing out the next string in memory
 
-NULL_R	.FILL	x20 ; just replace it with a space
+; alert strings
+ALTIN	.STRINGZ	"Please enter an input."
+ALTFD	.STRINGZ	"Please enter query."
 
-ALTIN	.STRINGZ	"Input empty, nothing to do."
-ALTFD	.STRINGZ	"Search query empty, nothing to do."
-
+; exception strings
 EXPT0	.STRINGZ	"Uh oh."
-EXPT1	.STRINGZ	"Unfinished."
 EXPT2	.STRINGZ	"Exit character found... halting."
 
 
